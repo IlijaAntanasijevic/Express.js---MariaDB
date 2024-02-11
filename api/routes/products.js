@@ -39,5 +39,9 @@ router.post("/",checkAuth ,upload.single('productImage'),productController.creat
 
 //PUT - kada se menja ceo objekat, PATCH - kda se menja deo objekta
 
-router.patch('/:productId',checkAuth, upload.single('productImage',productController.update));
+router.patch('/',checkAuth, upload.single('productImage'),productController.update);
+
+router.delete("/:productId", checkAuth, productController.delete);
+
+
 module.exports = router;
