@@ -52,20 +52,21 @@ exports.login = async (req, res) => {
       });
     }
     bcrypt.compare(req.body.password, admin[0].password, (err, result) => {
-      if (err) {
-        console.log("Compare error: " + err);
+      if (!result) {
+        //console.log("Compare error: " + err);
         conn.release();
         return res.status(401).json({
           message: "Invalid password"
         });
       }
-      if (result) {
+      else{
         const token = jwt.sign(
             {
               email: admin[0].email
             },
             process.env.JWT_KEY,
             {
+
               expiresIn: "1h"
             }
         );
@@ -75,6 +76,7 @@ exports.login = async (req, res) => {
           token: token
         });
       }
+
         conn.release();
       res.status(401).json({
         message: "Authorization failed"

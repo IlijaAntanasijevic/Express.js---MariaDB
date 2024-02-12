@@ -29,8 +29,11 @@ app.use((req, res, next) => {
 
 const productRoutes = require('./api/routes/products');
 const adminRoutes = require('./api/routes/admin');
+const orderRoutes = require('./api/routes/order');
+
 
 app.use('/products', productRoutes);
 app.use('/admin', adminRoutes);
+app.use('/orders', orderRoutes);
 
 module.exports = app;
