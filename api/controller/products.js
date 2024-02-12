@@ -64,6 +64,7 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try{
+
     const conn = await db.pool.getConnection();
     const product = await conn.query(`SELECT * FROM product WHERE product_id = ${req.body.id}`);
     if(product.length < 1){
