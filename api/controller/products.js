@@ -22,7 +22,14 @@ exports.fetchSingleProduct = async (req, res) => {
     const conn = await db.pool.getConnection();
     const rows = await conn.query(`SELECT p.*,i.path FROM product p INNER JOIN image i ON p.product_id = i.product_id WHERE p.product_id = ${id}`);
     conn.release();
-    res.json(rows[0]);
+    if(rows[0]){
+      res.json(rows[0]);
+    }
+    else {
+      res.status(500).json({
+        message: "Product not found"
+      });
+    }
   }
   catch(err){
     console.error('Error executing query:', err);
@@ -46,7 +53,7 @@ exports.create = async (req, res) => {
 
 
     const conn = await db.pool.getConnection();
-    const insertResult = await conn.query(`INSERT INTO product (product_name, quantity, details, total_quantity, price) VALUES ('${productObject.name}', ${productObject.quantity}, '${productObject.details}', ${productObject.totalQuantity}, ${productObject.price})`);
+    const insertResult = await conn.query(`INSERT INTO product (name, quantity, details, total_quantity, price) VALUES ('${productObject.name}', ${productObject.quantity}, '${productObject.details}', ${productObject.totalQuantity}, ${productObject.price})`);
 
     const insertedID = insertResult.insertId;
     //console.log("Inserted ID:", insertedID);
@@ -61,7 +68,7 @@ exports.create = async (req, res) => {
   }
 }
 
-
+/*-----------DEBUGGING---------------*/
 exports.update = async (req, res) => {
   try{
 
@@ -82,7 +89,7 @@ exports.update = async (req, res) => {
         details: req.body.details,
         imagePath: req.file ? req.file.filename : null
       }
-      await conn.query(`UPDATE product SET product_name='${object.name}', total_quantity=${object.totalQuantity}, price=${object.price}, details='${object.details}' WHERE product_id='${object.id}'`);
+      await conn.query(`UPDATE product SET name='${object.name}', total_quantity=${object.totalQuantity}, price=${object.price}, details='${object.details}' WHERE product_id='${object.id}'`);
 
 
       if (object.imagePath) {
@@ -90,7 +97,7 @@ exports.update = async (req, res) => {
       }
 
       conn.release();
-      res.status(200).json({
+      res.status(204).json({
        message:  "Product updated successfully"
       });
     }

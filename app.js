@@ -1,7 +1,15 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-
+/*
+TO-DO:
+- Slanje email-a adminu
+- Fixing order korisnika !!
+- Prikaz ukupne kolicine i koliko trenutno ima
+- Delete - admin
+- Insert - admin
+- Dodavanje admina/registracija
+ */
 
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json());
