@@ -23,10 +23,10 @@ exports.register = async (req, res) => {
             error: "Error occurred while hashing password"
           });
         } else {
-          await conn.query(`INSERT INTO admin (email, password, active) VALUES ('${req.body.email}', '${hash}', ${true})`);
+          await conn.query(`INSERT INTO admin (email, password) VALUES ('${req.body.email}', '${hash}')`);
           console.log("Inserted");
           conn.release();
-          return res.status(200).json({
+          return res.status(201).json({
             message: "Admin registered successfully"
           });
         }
@@ -66,7 +66,7 @@ exports.login = async (req, res) => {
             },
             process.env.JWT_KEY,
             {
-              expiresIn: "1d"
+              expiresIn: "8h"
             }
         );
         conn.release();

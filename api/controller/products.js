@@ -43,7 +43,6 @@ exports.create = async (req, res) => {
   try {
     const productObject = {
       name: req.body.name,
-      quantity: parseInt(req.body.quantity),
       details: req.body.details,
       totalQuantity: parseInt(req.body.totalQuantity),
       price: parseFloat(req.body.price),
@@ -53,7 +52,7 @@ exports.create = async (req, res) => {
 
 
     const conn = await db.pool.getConnection();
-    const insertResult = await conn.query(`INSERT INTO product (name, quantity, details, total_quantity, price) VALUES ('${productObject.name}', ${productObject.quantity}, '${productObject.details}', ${productObject.totalQuantity}, ${productObject.price})`);
+    const insertResult = await conn.query(`INSERT INTO product (name, details, total_quantity, price) VALUES ('${productObject.name}', '${productObject.details}', ${productObject.totalQuantity}, ${productObject.price})`);
 
     const insertedID = insertResult.insertId;
     //console.log("Inserted ID:", insertedID);
@@ -61,7 +60,7 @@ exports.create = async (req, res) => {
     await conn.query(`INSERT INTO image (path, product_id) VALUES ('${productObject.image}', ${insertedID})`);
 
     conn.release();
-    res.status(200).send("Product inserted successfully");
+    res.status(201).send("Product inserted successfully");
   } catch (err) {
     console.error('Error executing query:', err);
     res.status(500).send(err);

@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 /*
 TO-DO:
 - Slanje email-a adminu
-- Fixing order korisnika !!
+- Fixing order korisnika !! ✔
 - Prikaz ukupne kolicine i koliko trenutno ima
 - Delete - admin
 - Insert - admin

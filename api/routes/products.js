@@ -39,7 +39,7 @@ router.post("/",checkAuth ,upload.single('productImage'),productController.creat
 
 //PUT - kada se menja ceo objekat, PATCH - kda se menja deo objekta
 
-router.put('/', upload.single('productImage'),productController.update);
+router.put('/',checkAuth, upload.single('productImage'),productController.update);
 
 /*
 router.put('/',upload.single('productImage'),(req, res) => {
