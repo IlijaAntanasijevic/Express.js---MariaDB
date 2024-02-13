@@ -112,6 +112,7 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
   try{
     const conn = await db.pool.getConnection();
+    await conn.query(`DELETE FROM image WHERE product_id = ${req.params.productId}`);
     await conn.query(`DELETE FROM product WHERE product_id = ${req.params.productId}`);
     res.status(201).json({
       message: "Successfully deleted"
