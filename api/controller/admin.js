@@ -9,12 +9,20 @@ exports.register = async (req, res) => {
   try {
     const conn = await db.pool.getConnection();
     const rows = await conn.query(`SELECT email FROM admin WHERE email = '${req.body.email}'`);
-    if (rows.length > 0) {
+
+    if(rows[0] != undefined && rows[0].email == ""){
+      return res.status(409).json({
+        message: "Email is required"
+      });
+    }
+    else if (rows.length > 0) {
       conn.release();
       return res.status(409).json({
         message: "Email already exists"
       });
-    } else {
+    }
+
+    else {
       bcrypt.hash(req.body.password, 10, async (err, hash) => {
         if (err) {
           console.log("Error occurred while hashing password:", err);

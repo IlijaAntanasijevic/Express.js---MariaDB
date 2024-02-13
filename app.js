@@ -3,12 +3,14 @@ const app = express();
 const bodyParser = require('body-parser');
 /*
 TO-DO:
-- Slanje email-a adminu
+- Delete - admin ✔
+- Insert - admin ✔
 - Fixing order korisnika !! ✔
-- Prikaz ukupne kolicine i koliko trenutno ima
-- Delete - admin
-- Insert - admin
 - Dodavanje admina/registracija
+- Brisanje admina
+- Slanje email-a adminu
+- Prikaz ukupne kolicine i koliko trenutno ima
+
  */
 
 app.use(bodyParser.urlencoded({extended: false}))

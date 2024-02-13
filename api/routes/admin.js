@@ -4,7 +4,7 @@ const checkAuthorization = require('../helpers/check-authorization');
 
 const adminController = require('../controller/admin');
 
-router.post('/register', adminController.register);
+router.post('/register', checkAuthorization,adminController.register);
 router.post('/login', adminController.login);
 router.delete('/:adminID', checkAuthorization ,adminController.delete);
 
