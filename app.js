@@ -2,12 +2,13 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 /*
+
 TO-DO:
 - Delete - admin ✔
 - Insert - admin ✔
 - Fixing order korisnika !! ✔
-- Dodavanje admina/registracija
-- Brisanje admina
+- Dodavanje admina/registracija ✔
+- Brisanje admina ✔
 - Slanje email-a adminu
 - Prikaz ukupne kolicine i koliko trenutno ima
 

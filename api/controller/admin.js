@@ -3,7 +3,27 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const {pool} = require("../connection/connection");
 
+exports.getAll = async (req, res) => {
+  try {
+    const conn = await db.pool.getConnection();
+    const admin = await conn.query(`SELECT admin_id, email FROM admin`);
 
+    if(admin.length > 0){
+      res.status(200).json(admin);
+    }
+    else {
+      res.status(500).json({
+        message: "Admins not found"
+      });
+    }
+  }
+  catch (error){
+    console.log("Catch error: " + error);
+    res.status(500).json({
+      message: error
+    });
+  }
+}
 //DODATI VALIDACIJU I HANDLOVANJE GRESAKA
 exports.register = async (req, res) => {
   try {
