@@ -9,7 +9,7 @@ TO-DO:
 - Fixing order korisnika !! ✔
 - Dodavanje admina/registracija ✔
 - Brisanje admina ✔
-- Slanje email-a adminu
+- Slanje email-a adminu ✔
 - Prikaz ukupne kolicine i koliko trenutno ima
 
  */
