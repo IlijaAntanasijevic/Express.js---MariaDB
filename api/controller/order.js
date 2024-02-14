@@ -1,4 +1,5 @@
 const db = require("../connection/connection");
+const nodeMailer = require('nodemailer');
 //---------------DEBUGGING--------------------//
 exports.check = async (req, res) => {
     try {
@@ -79,11 +80,28 @@ exports.create = async (req, res) => {
             //const insertProductsQuery = `INSERT INTO order_product (order_id, product_id, quantity, date_start, date_end) VALUES (?, ?, ?, ?, ?)`;
             //await conn.batch(insertProductsQuery, [productValues]);
 
-            await conn.commit();
+            await conn.commit();//bmfl gzip gsxj qlye
             await conn.release();
+
+
+            const transporter = nodeMailer.createTransport({
+                service: "Gmail",
+                auth: {
+                    user: 'ilija0125@gmail.com',
+                    pass: 'bmfl gzip gsxj qlye'
+                }
+            })
+
+            await transporter.sendMail({
+                from: 'Order<ilija0125@gmail.com>',
+                to: 'ilija0308@gmail.com',
+                subject: "TEST API",
+                text: 'Test email'
+            })
 
             res.status(201).json({
                 message: "Order products inserted successfully"
+
             })
         }
         catch (error){

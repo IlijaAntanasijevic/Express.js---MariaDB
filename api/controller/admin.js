@@ -1,6 +1,8 @@
 const db = require('../connection/connection');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+
+const emailRegex = '/^\\w+([\\.-]?\\w+)*@\\w+([\\.-]?\\w+)*(\\.\\w{2,3})+$/';
 const {pool} = require("../connection/connection");
 
 exports.getAll = async (req, res) => {
@@ -24,7 +26,7 @@ exports.getAll = async (req, res) => {
     });
   }
 }
-//DODATI VALIDACIJU I HANDLOVANJE GRESAKA
+
 exports.register = async (req, res) => {
   try {
     const conn = await db.pool.getConnection();
@@ -41,7 +43,11 @@ exports.register = async (req, res) => {
         message: "Email already exists"
       });
     }
-
+    else if(!req.body.email.match(emailRegex)){
+      return res.status(409).json({
+        message: "Email is not valid format"
+      });
+    }
     else {
       bcrypt.hash(req.body.password, 10, async (err, hash) => {
         if (err) {
@@ -52,7 +58,6 @@ exports.register = async (req, res) => {
           });
         } else {
           await conn.query(`INSERT INTO admin (email, password) VALUES ('${req.body.email}', '${hash}')`);
-          console.log("Inserted");
           conn.release();
           return res.status(201).json({
             message: "Admin registered successfully"

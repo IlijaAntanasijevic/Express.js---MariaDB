@@ -41,14 +41,6 @@ router.post("/",checkAuth ,upload.single('productImage'),productController.creat
 
 router.put('/',checkAuth, upload.single('productImage'),productController.update);
 
-/*
-router.put('/',upload.single('productImage'),(req, res) => {
-  console.log(req.body)
-  return res.status(301);
-});
- */
-
-
 router.delete("/:productId", checkAuth, productController.delete);
 
 
