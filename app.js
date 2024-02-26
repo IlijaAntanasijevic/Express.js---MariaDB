@@ -2,23 +2,15 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
-/*
 
-TO-DO:
-- Delete - admin ✔
-- Insert - admin ✔
-- Fixing order korisnika !! ✔
-- Dodavanje admina/registracija ✔
-- Brisanje admina ✔
-- Slanje email-a adminu ✔
-
- */
 
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json());
 app.use('/uploads',express.static('uploads'));
 // app.use(express.json());
 
+//dotenv is used to load environment variables from a .env file into process.env
+//congif() method is used to load the environment variables from the .env file
 require('dotenv').config();
 
 

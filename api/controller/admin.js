@@ -3,7 +3,6 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const emailRegex = '/^\\w+([\\.-]?\\w+)*@\\w+([\\.-]?\\w+)*(\\.\\w{2,3})+$/';
-const {pool} = require("../connection/connection");
 
 exports.getAll = async (req, res) => {
   try {
@@ -30,7 +29,6 @@ exports.register = async (req, res) => {
   try {
     const conn = await db.pool.getConnection();
     const rows = await conn.query(`SELECT email FROM admin WHERE email = '${req.body.email}'`);
-    const userEmail = req.body.email;
 
     if(rows[0] != undefined && rows[0].email == ""){
       return res.status(409).json({
@@ -87,6 +85,7 @@ exports.login = async (req, res) => {
         });
       }
       else{
+        // jwt.sign is used to create a token with the payload and secret key and expiration time
         const token = jwt.sign(
             {
               email: admin[0].email

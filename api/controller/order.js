@@ -9,7 +9,7 @@ exports.check = async (req, res) => {
 
         //DbStartDate = 2024-01-25 >= 2024-01-27
         //DbEndDate = 2024-01-27 <= 2024-01-25
-        //Ovaj query je zajeban :D
+
         const orders = await conn.query(`SELECT quantity FROM order_product WHERE product_id = ${req.params.id} AND((STR_TO_DATE('${req.params.startDate}', '%Y-%m-%d') BETWEEN date_start AND date_end) OR (STR_TO_DATE('${req.params.endDate}', '%Y-%m-%d') BETWEEN date_start AND date_end) OR (date_start BETWEEN STR_TO_DATE('${req.params.startDate}', '%Y-%m-%d') AND STR_TO_DATE('${req.params.endDate}', '%Y-%m-%d')) OR (date_end BETWEEN STR_TO_DATE('${req.params.startDate}', '%Y-%m-%d') AND STR_TO_DATE('${req.params.endDate}', '%Y-%m-%d')))`);
 
 
