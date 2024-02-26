@@ -37,8 +37,6 @@ router.get('/:productId',productController.fetchSingleProduct);
 
 router.post("/",checkAuth ,upload.single('productImage'),productController.create);
 
-//PUT - kada se menja ceo objekat, PATCH - kda se menja deo objekta
-
 router.put('/',checkAuth, upload.single('productImage'),productController.update);
 
 router.delete("/:productId", checkAuth, productController.delete);

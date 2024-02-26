@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
+const rateLimit = require('express-rate-limit');
 /*
 
 TO-DO:
@@ -10,7 +11,6 @@ TO-DO:
 - Dodavanje admina/registracija ✔
 - Brisanje admina ✔
 - Slanje email-a adminu ✔
-- Prikaz ukupne kolicine i koliko trenutno ima
 
  */
 
@@ -38,6 +38,16 @@ app.use((req, res, next) => {
 });
 
 
+//**LIMITER **//
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+})
+
+app.use(limiter);
 
 const productRoutes = require('./api/routes/products');
 const adminRoutes = require('./api/routes/admin');
@@ -47,5 +57,6 @@ const orderRoutes = require('./api/routes/order');
 app.use('/products', productRoutes);
 app.use('/admin', adminRoutes);
 app.use('/orders', orderRoutes);
+
 
 module.exports = app;

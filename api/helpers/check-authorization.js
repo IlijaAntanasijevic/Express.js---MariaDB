@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 
-//sacuvati u cookie i naci kako se to radi - Ilija
 module.exports = (req,res, next) => {
   try {
     const token = req.headers.authorization.split(" ")[1];

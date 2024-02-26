@@ -26,11 +26,11 @@ exports.getAll = async (req, res) => {
     });
   }
 }
-
 exports.register = async (req, res) => {
   try {
     const conn = await db.pool.getConnection();
     const rows = await conn.query(`SELECT email FROM admin WHERE email = '${req.body.email}'`);
+    const userEmail = req.body.email;
 
     if(rows[0] != undefined && rows[0].email == ""){
       return res.status(409).json({
@@ -41,11 +41,6 @@ exports.register = async (req, res) => {
       conn.release();
       return res.status(409).json({
         message: "Email already exists"
-      });
-    }
-    else if(!req.body.email.match(emailRegex)){
-      return res.status(409).json({
-        message: "Email is not valid format"
       });
     }
     else {
@@ -81,15 +76,14 @@ exports.login = async (req, res) => {
     if (admin.length < 1) {
       conn.release();
       return res.status(401).json({
-        message: "Invalid email"
+        message: "Invalid email" //credentials
       });
     }
     bcrypt.compare(req.body.password, admin[0].password, (err, result) => {
       if (!result) {
-        //console.log("Compare error: " + err);
         conn.release();
         return res.status(401).json({
-          message: "Invalid password"
+          message: "Invalid password" //credentials
         });
       }
       else{
@@ -124,6 +118,11 @@ exports.login = async (req, res) => {
 
 
 exports.delete = async (req, res) => {
+  if(isNaN(req.params.adminID)){
+    return res.status(500).json({
+      message: "Server error"
+    });
+  }
   try {
     const conn= await db.pool.getConnection();
     const findAdmin = await conn.query(`SELECT admin_id FROM admin WHERE admin_id = '${req.params.adminID}'`);

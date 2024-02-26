@@ -54,13 +54,13 @@ exports.create = async (req, res) => {
             address: req.body.address,
         }
 
+
         const orderedProducts = req.body.products; // object array
 
 
         const conn = await db.pool.getConnection();
+
         await conn.beginTransaction();
-
-
 
         try {
 
@@ -71,17 +71,56 @@ exports.create = async (req, res) => {
 
             const orderInsertedID = insertOrderQuery.insertId;
 
-
             for(let product of orderedProducts){
                 await conn.query (`INSERT INTO order_product (order_id, product_id, quantity, date_start, date_end) VALUES (${orderInsertedID},${product.id},${product.quantity},'${product.startDate}','${product.endDate}')`);
-
             }
 
             //const insertProductsQuery = `INSERT INTO order_product (order_id, product_id, quantity, date_start, date_end) VALUES (?, ?, ?, ?, ?)`;
             //await conn.batch(insertProductsQuery, [productValues]);
 
-            await conn.commit();//bmfl gzip gsxj qlye
+            const productIDs = orderedProducts.map(product => product.id);
+            const products = await conn.query(`SELECT name,product_id FROM product WHERE product_id IN (${productIDs})`);
+
+
+            const combinedProducts = orderedProducts.map(productData => {
+                const productFromDB = products.find(product => product.product_id == productData.id);
+                return {
+                    name: productFromDB.name,
+                    quantity: productData.quantity,
+                    startDate: productData.startDate,
+                    endDate: productData.endDate
+                };
+            });
+
+
+            await conn.commit();
             await conn.release();
+
+
+
+            let mailText = `<h1>User Information:</h1>               
+                                    <h3>Name: ${orderObject.name} ${orderObject.last_name}</h3>
+                                    <h3>Phone: ${orderObject.phone}</h3>
+                                    <h3>Address: ${orderObject.address}</h3>
+                                    <h3>Email: ${orderObject.email}</h3><br>`;
+
+            let productsString = '<h1>Products:</h1><table style="width: 100%; font-size: 16px; text-align: center">';
+            for(let product of combinedProducts){
+                productsString += ` <tr>
+                                    <th>Name</th>
+                                    <th>Quantity</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                  </tr>
+                                   <tr>
+                                    <td>${product.name}</td>
+                                    <td>${product.quantity}</td>
+                                    <td>${product.startDate}</td>
+                                    <td>${product.endDate}</td>
+                                   </tr>`
+            }
+            productsString += '</table>';
+            mailText += productsString;
 
 
             const transporter = nodeMailer.createTransport({
@@ -95,8 +134,8 @@ exports.create = async (req, res) => {
             await transporter.sendMail({
                 from: 'Order<ilija0125@gmail.com>',
                 to: 'ilija0308@gmail.com',
-                subject: "TEST API",
-                text: 'Test email'
+                subject: "NEW ORDER: " + orderInsertedID,
+                html: mailText
             })
 
             res.status(201).json({
@@ -106,7 +145,6 @@ exports.create = async (req, res) => {
         }
         catch (error){
             await conn.rollback();
-            console.log("Transaction error: " + error);
             res.status(500).json({
                // message: error
                 message: "Server error"

@@ -21,7 +21,7 @@ exports.fetchSingleProduct = async (req, res) => {
   try{
     const conn = await db.pool.getConnection();
     const rows = await conn.query(`SELECT p.*,i.path FROM product p INNER JOIN image i ON p.product_id = i.product_id WHERE p.product_id = ${id}`);
-    conn.release();
+    await conn.release();
     if(rows[0]){
       res.json(rows[0]);
     }
@@ -46,7 +46,7 @@ exports.create = async (req, res) => {
       details: req.body.details,
       totalQuantity: parseInt(req.body.totalQuantity),
       price: parseFloat(req.body.price),
-      image: req.file.filename
+      image: req.file.filename === 'undefined' ? null : req.file.filename
     };
 
 
@@ -69,8 +69,12 @@ exports.create = async (req, res) => {
 
 /*-----------DEBUGGING---------------*/
 exports.update = async (req, res) => {
+  if(isNaN(req.body.id)){
+    res.status(500).json({
+      message: "Server error"
+    });
+  }
   try{
-
     const conn = await db.pool.getConnection();
     const product = await conn.query(`SELECT * FROM product WHERE product_id = ${req.body.id}`);
     if(product.length < 1){
