@@ -9,7 +9,7 @@ exports.fetchAll = async (req, res) => {
     res.json(rows);
   }
   catch(err){
-    console.error('Error executing query:', err);
+    //console.error('Error executing query:', err);
     res.status(500).json({
       message: "Server error"
     });
@@ -26,13 +26,13 @@ exports.fetchSingleProduct = async (req, res) => {
       res.json(rows[0]);
     }
     else {
-      res.status(500).json({
+      res.status(404).json({
         message: "Product not found"
       });
     }
   }
   catch(err){
-    console.error('Error executing query:', err);
+    //console.error('Error executing query:', err);
     res.status(500).json({
       message: "Server error"
     });
@@ -41,6 +41,7 @@ exports.fetchSingleProduct = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
+
     const productObject = {
       name: req.body.name,
       details: req.body.details,
@@ -50,9 +51,9 @@ exports.create = async (req, res) => {
     };
 
 
-
     const conn = await db.pool.getConnection();
-    const insertResult = await conn.query(`INSERT INTO product (name, details, total_quantity, price) VALUES ('${productObject.name}', '${productObject.details}', ${productObject.totalQuantity}, ${productObject.price})`);
+    const insertResult = await conn.query(`INSERT INTO product (name, details, total_quantity, price) 
+                                                VALUES ('${productObject.name}', '${productObject.details}', ${productObject.totalQuantity}, ${productObject.price})`);
 
     const insertedID = insertResult.insertId;
     //console.log("Inserted ID:", insertedID);
@@ -129,3 +130,4 @@ exports.delete = async (req, res) => {
     });
   }
 }
+

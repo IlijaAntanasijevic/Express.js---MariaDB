@@ -3,18 +3,34 @@ const app = express();
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
 
+//body parser se koristi za parsiranje JSON objekata i slanja podataka preko HTTP zahteva
+//bodyParser.urlencoded() se koristi za parsiranje podataka koji su poslati preko forme
 
+/*
+    * Returns middleware that only parses urlencoded bodies and only looks at requests
+    * where the Content-Type header matches the type option
+    * querystring?
+*/
+//app.use(bodyParser.urlencoded())
 app.use(bodyParser.urlencoded({extended: false}))
+
+
+/*
+    * Returns middleware that only parses json and only looks at requests
+    * where the Content-Type header matches the type option.
+*/
 app.use(bodyParser.json());
+//express.static() se koristi za slanje statickih fajlova kao sto su slike, CSS fajlovi, JavaScript fajlovi i sl.
 app.use('/uploads',express.static('uploads'));
 // app.use(express.json());
 
-//dotenv is used to load environment variables from a .env file into process.env
-//congif() method is used to load the environment variables from the .env file
+//? dotenv is used to load environment variables from a .env file into process.env
+//? congif() method is used to load the environment variables from the .env file
+
 require('dotenv').config();
 
 
-//CORS SETTINGS
+//*** CORS SETTINGS ***//
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -30,7 +46,7 @@ app.use((req, res, next) => {
 });
 
 
-//**LIMITER **//
+//***LIMITER ***//
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -50,5 +66,6 @@ app.use('/products', productRoutes);
 app.use('/admin', adminRoutes);
 app.use('/orders', orderRoutes);
 
-
+// module exports se koristi za izvoz modula tacnije objekta app.
+// Modul se izvozi kako bi mogao biti koriscen u drugim fajlovima
 module.exports = app;
