@@ -1,0 +1,9 @@
+1. Fix order date (email?) - checking ✅?
+2. Add checking for dates on checkout ✅?
+3. Change DB / Add table for emails  
+4. Add changing admin email
+5. Refresh token ?!?!?! (yt?)
+6. Provera kada se admin obrise (promeni active) da li moze da se loginuje
+7. Check limiter
+8. Pregled svih rezervacija na admin panelu
+9. Paginacija

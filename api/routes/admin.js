@@ -8,5 +8,7 @@ router.get('/',checkAuthorization,adminController.getAll);
 router.post('/register', checkAuthorization,adminController.register);
 router.post('/login', adminController.login);
 router.delete('/:adminID', checkAuthorization ,adminController.delete);
+router.get('/email',checkAuthorization,adminController.getCurrentEmail);
+router.post('/changeEmail',checkAuthorization,adminController.changeEmail)
 
 module.exports = router;

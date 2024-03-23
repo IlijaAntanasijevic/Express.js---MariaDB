@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const checkAuthorization = require('../helpers/check-authorization');
+const checkQuantity = require('../helpers/checkOrderCart');
 
 
 const orderController = require('../controller/order');
 
 
-router.get('/:id/:startDate/:endDate/:quantity',orderController.check);
-
-router.post('/',orderController.create);
+//router.get('/:id/:startDate/:endDate/:quantity',orderController.check);
+router.post('/addToCart',orderController.check);
+router.post('/',checkQuantity,orderController.create);
 
 module.exports = router;

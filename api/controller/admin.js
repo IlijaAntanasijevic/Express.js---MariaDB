@@ -146,3 +146,40 @@ exports.delete = async (req, res) => {
     });
   }
 }
+
+exports.getCurrentEmail = async (req, res) => {
+
+  const conn = await db.pool.getConnection();
+  const email = await conn.query('SELECT email FROM email ORDER BY created_at DESC LIMIT 1');
+  if(email){
+    res.status(200).json(email)
+  }
+  else {
+    res.status(500).json({
+      message: "Server error"
+    })
+  }
+
+}
+
+exports.changeEmail = async (req, res) => {
+
+  try{
+      const newEmail = req.body.email;
+      const conn = await db.pool.getConnection();
+      await conn.query(`INSERT INTO email (email) VALUES ('${newEmail}')`);
+      await conn.release();
+
+      return res.status(201).json({
+        message: 'Successfully'
+      });
+      
+  }
+  catch(error){
+    console.log(error);
+    return res.status(500).json({
+      message: 'Server error'
+    });
+  }
+
+}

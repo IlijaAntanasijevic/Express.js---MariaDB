@@ -10,7 +10,7 @@ exports.check = async (req, res) => {
         //DbStartDate = 2024-01-25 >= 2024-01-27
         //DbEndDate = 2024-01-27 <= 2024-01-25
 
-        const orders = await conn.query(`SELECT quantity FROM order_product WHERE product_id = ${req.params.id} AND((STR_TO_DATE('${req.params.startDate}', '%Y-%m-%d') BETWEEN date_start AND date_end) OR (STR_TO_DATE('${req.params.endDate}', '%Y-%m-%d') BETWEEN date_start AND date_end) OR (date_start BETWEEN STR_TO_DATE('${req.params.startDate}', '%Y-%m-%d') AND STR_TO_DATE('${req.params.endDate}', '%Y-%m-%d')) OR (date_end BETWEEN STR_TO_DATE('${req.params.startDate}', '%Y-%m-%d') AND STR_TO_DATE('${req.params.endDate}', '%Y-%m-%d')))`);
+        const orders = await conn.query(`SELECT quantity FROM order_product WHERE product_id = ${req.body.id} AND((STR_TO_DATE('${req.body.startDate}', '%Y-%m-%d') BETWEEN date_start AND date_end) OR (STR_TO_DATE('${req.body.endDate}', '%Y-%m-%d') BETWEEN date_start AND date_end) OR (date_start BETWEEN STR_TO_DATE('${req.params.startDate}', '%Y-%m-%d') AND STR_TO_DATE('${req.body.endDate}', '%Y-%m-%d')) OR (date_end BETWEEN STR_TO_DATE('${req.body.startDate}', '%Y-%m-%d') AND STR_TO_DATE('${req.body.endDate}', '%Y-%m-%d')))`);
 
 
         let totalOrdersQuantity = 0;
@@ -18,12 +18,13 @@ exports.check = async (req, res) => {
         for(let item of orders){
             totalOrdersQuantity += item.quantity;
         }
-        const product = await conn.query(`SELECT total_quantity FROM product WHERE product_id = '${req.params.id}'`);
+        const product = await conn.query(`SELECT total_quantity FROM product WHERE product_id = '${req.body.id}'`);
         const totalProductQuantity = product[0].total_quantity; //20
         let diff = totalProductQuantity - totalOrdersQuantity;
+        
 
-        if(diff - req.params.quantity < 0){
-            return res.status(404).json({
+        if(diff - req.body.quantity < 0){
+            return res.status(400).json({
                 message: `out of stock, available: ${diff}`
             })
         }
@@ -56,6 +57,7 @@ exports.create = async (req, res) => {
 
 
         const orderedProducts = req.body.products; // object array
+
 
 
         const conn = await db.pool.getConnection();
@@ -91,6 +93,7 @@ exports.create = async (req, res) => {
                     endDate: productData.endDate
                 };
             });
+            const emailToSend = await conn.query('SELECT email FROM email ORDER BY created_at DESC LIMIT 1');
 
 
             await conn.commit();
@@ -130,10 +133,10 @@ exports.create = async (req, res) => {
                     pass: 'bmfl gzip gsxj qlye'
                 }
             })
-
+            console.log(emailToSend[0].email);
             await transporter.sendMail({
                 from: 'Order<ilija0125@gmail.com>',
-                to: 'ilija0308@gmail.com',
+                to: emailToSend[0].email,
                 subject: "NEW ORDER: " + orderInsertedID,
                 html: mailText
             })
@@ -145,6 +148,7 @@ exports.create = async (req, res) => {
         }
         catch (error){
             await conn.rollback();
+            console.log(error);
             res.status(500).json({
                // message: error
                 message: "Server error"
