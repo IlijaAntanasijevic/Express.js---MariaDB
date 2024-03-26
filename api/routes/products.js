@@ -35,9 +35,9 @@ router.get('/', productController.fetchAll);
 
 router.get('/:productId',productController.fetchSingleProduct);
 
-router.post("/",checkAuth ,upload.single('productImage'),productController.create);
+router.post("/",checkAuth ,upload.single('productImage'),productController.create); //key : value
 
-router.put('/',checkAuth, upload.single('productImage'),productController.update);
+router.put('/',checkAuth, upload.single('productImage'),productController.update); // PATCH - deo objekta 
 
 router.delete("/:productId", checkAuth, productController.delete);
 

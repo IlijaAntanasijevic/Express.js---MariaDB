@@ -4,7 +4,7 @@ const db = require('../connection/connection');
 exports.fetchAll = async (req, res) => {
   try{
     const conn = await db.pool.getConnection();
-    const rows = await conn.query("SELECT p.*,i.path FROM product p INNER JOIN image i ON p.product_id = i.product_id");
+    const rows = await conn.query("SELECT p.*,i.path FROM product p INNER JOIN image i ON p.product_id = i.product_id"); 
     conn.release();
     res.json(rows);
   }
@@ -17,12 +17,17 @@ exports.fetchAll = async (req, res) => {
 }
 
 exports.fetchSingleProduct = async (req, res) => {
-  const id = req.params.productId;
+  const id = req.params.productId; 
   try{
     const conn = await db.pool.getConnection();
-    const rows = await conn.query(`SELECT p.*,i.path FROM product p INNER JOIN image i ON p.product_id = i.product_id WHERE p.product_id = ${id}`);
+    if(isNaN(id)) {
+      res.status(500).json({
+        message: 'Server error'
+      })
+    }
+    const rows = await conn.query(`SELECT p.*,i.path FROM product p INNER JOIN image i ON p.product_id = i.product_id WHERE p.product_id = ${id}`); //SQL injection
     await conn.release();
-    if(rows[0]){
+    if(rows[0]){ // rows[0] == null
       res.json(rows[0]);
     }
     else {
@@ -41,19 +46,30 @@ exports.fetchSingleProduct = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-
     const productObject = {
-      name: req.body.name,
+      name: req.body.name, 
       details: req.body.details,
-      totalQuantity: parseInt(req.body.totalQuantity),
-      price: parseFloat(req.body.price),
-      image: req.file.filename === 'undefined' ? null : req.file.filename
+      totalQuantity: parseInt(req.body.totalQuantity), //2,5 = 2  '2' - string 
+      price: parseFloat(req.body.price), 
+      image: req.file.filename === 'undefined' ? null : req.file.filename 
     };
+
+    if(productObject.image == null){
+      res.status(400).json({
+        message: "Image is required"
+      })
+    }
+    if(productObject.name == ''){
+      res.status(400).json({
+        message: "Name is required"
+      })
+    }
 
 
     const conn = await db.pool.getConnection();
+    conn.beginTransaction();
     const insertResult = await conn.query(`INSERT INTO product (name, details, total_quantity, price) 
-                                                VALUES ('${productObject.name}', '${productObject.details}', ${productObject.totalQuantity}, ${productObject.price})`);
+                                           VALUES ('${productObject.name}', '${productObject.details}', ${productObject.totalQuantity}, ${productObject.price})`);
 
     const insertedID = insertResult.insertId;
     //console.log("Inserted ID:", insertedID);
@@ -61,9 +77,13 @@ exports.create = async (req, res) => {
     await conn.query(`INSERT INTO image (path, product_id) VALUES ('${productObject.image}', ${insertedID})`);
 
     conn.release();
+    conn.commit();
+
     res.status(201).send("Product inserted successfully");
+
   } catch (err) {
     console.error('Error executing query:', err);
+    conn.rollback();
     res.status(500).send(err);
   }
 }
@@ -77,7 +97,7 @@ exports.update = async (req, res) => {
   }
   try{
     const conn = await db.pool.getConnection();
-    const product = await conn.query(`SELECT * FROM product WHERE product_id = ${req.body.id}`);
+    const product = await conn.query(`SELECT * FROM product WHERE product_id = ${req.body.id}`); //[]
     if(product.length < 1){
       conn.release();
       return res.status(404).json({
@@ -93,7 +113,9 @@ exports.update = async (req, res) => {
         details: req.body.details,
         imagePath: req.file ? req.file.filename : null
       }
-      await conn.query(`UPDATE product SET name='${object.name}', total_quantity=${object.totalQuantity}, price=${object.price}, details='${object.details}' WHERE product_id='${object.id}'`);
+      await conn.query(`UPDATE product 
+                        SET name='${object.name}', total_quantity=${object.totalQuantity}, price=${object.price}, details='${object.details}' 
+                        WHERE product_id='${object.id}'`);
 
 
       if (object.imagePath) {
@@ -115,16 +137,24 @@ exports.update = async (req, res) => {
 }
 
 exports.delete = async (req, res) => {
+    const id = req.params.productId;
   try{
+    if(isNaN(id)) {
+      res.status(500).json({
+        message: 'Server error'
+      })
+    }
     const conn = await db.pool.getConnection();
     await conn.query(`DELETE FROM image WHERE product_id = ${req.params.productId}`);
     await conn.query(`DELETE FROM product WHERE product_id = ${req.params.productId}`);
+
+    
     res.status(201).json({
       message: "Successfully deleted"
     })
   }
-  catch(err){
-    console.error('Error executing query:', err);
+  catch(error){
+    console.log('Error executing query:', error);
     res.status(500).json({
       message: "Server error"
     });

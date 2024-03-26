@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const bodyParser = require('body-parser');
+const bodyParser = require('body-parser'); 
 const rateLimit = require('express-rate-limit');
 
 //body parser se koristi za parsiranje JSON objekata i slanja podataka preko HTTP zahteva
@@ -30,7 +30,7 @@ app.use('/uploads',express.static('uploads'));
 require('dotenv').config();
 
 
-//*** CORS SETTINGS ***//
+//*** CORS SETTINGS *** - GPT, Stackoverflow //
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -46,12 +46,12 @@ app.use((req, res, next) => {
 });
 
 
-//***LIMITER ***//
-
+//*** LIMITER ***//
+//https://www.npmjs.com/package/express-rate-limit
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers 
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 })
 
@@ -62,9 +62,9 @@ const adminRoutes = require('./api/routes/admin');
 const orderRoutes = require('./api/routes/order');
 
 
-app.use('/products', productRoutes);
-app.use('/admin', adminRoutes);
-app.use('/orders', orderRoutes);
+app.use('/products', productRoutes); //api.com/products/8
+app.use('/admin', adminRoutes); //api.com/admin/register => /admin , /register 
+app.use('/orders', orderRoutes); //api.com/orders
 
 // module exports se koristi za izvoz modula tacnije objekta app.
 // Modul se izvozi kako bi mogao biti koriscen u drugim fajlovima

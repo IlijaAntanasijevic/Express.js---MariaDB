@@ -9,8 +9,10 @@ exports.check = async (req, res) => {
 
         //DbStartDate = 2024-01-25 >= 2024-01-27
         //DbEndDate = 2024-01-27 <= 2024-01-25
-
-        const orders = await conn.query(`SELECT quantity FROM order_product WHERE product_id = ${req.body.id} AND((STR_TO_DATE('${req.body.startDate}', '%Y-%m-%d') BETWEEN date_start AND date_end) OR (STR_TO_DATE('${req.body.endDate}', '%Y-%m-%d') BETWEEN date_start AND date_end) OR (date_start BETWEEN STR_TO_DATE('${req.params.startDate}', '%Y-%m-%d') AND STR_TO_DATE('${req.body.endDate}', '%Y-%m-%d')) OR (date_end BETWEEN STR_TO_DATE('${req.body.startDate}', '%Y-%m-%d') AND STR_TO_DATE('${req.body.endDate}', '%Y-%m-%d')))`);
+        
+        
+        //GPT
+        const orders = await conn.query(`SELECT quantity FROM order_product WHERE product_id = ${req.body.id} AND ((STR_TO_DATE('${req.body.startDate}', '%Y-%m-%d') BETWEEN date_start AND date_end) OR (STR_TO_DATE('${req.body.endDate}', '%Y-%m-%d') BETWEEN date_start AND date_end) OR (date_start BETWEEN STR_TO_DATE('${req.params.startDate}', '%Y-%m-%d') AND STR_TO_DATE('${req.body.endDate}', '%Y-%m-%d')) OR (date_end BETWEEN STR_TO_DATE('${req.body.startDate}', '%Y-%m-%d') AND STR_TO_DATE('${req.body.endDate}', '%Y-%m-%d')))`);
 
 
         let totalOrdersQuantity = 0;
@@ -25,7 +27,7 @@ exports.check = async (req, res) => {
 
         if(diff - req.body.quantity < 0){
             return res.status(400).json({
-                message: `out of stock, available: ${diff}`
+                message: `Menge nicht verfügbar, Anzahl auf Lager: ${diff}` 
             })
         }
         else {
@@ -75,7 +77,10 @@ exports.create = async (req, res) => {
 
             for(let product of orderedProducts){
                 await conn.query (`INSERT INTO order_product (order_id, product_id, quantity, date_start, date_end) VALUES (${orderInsertedID},${product.id},${product.quantity},'${product.startDate}','${product.endDate}')`);
+                // n + 1 - lazyloading
             }
+    
+
 
             //const insertProductsQuery = `INSERT INTO order_product (order_id, product_id, quantity, date_start, date_end) VALUES (?, ?, ?, ?, ?)`;
             //await conn.batch(insertProductsQuery, [productValues]);
