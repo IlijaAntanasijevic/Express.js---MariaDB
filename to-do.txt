@@ -1,0 +1,29 @@
+1. Fix order date (email?) - checking ✅?
+2. Add checking for dates on checkout ✅?
+3. Change DB / Add table for emails  ✅ 
+4. Add changing admin email ✅
+5. Refresh token ?!?!?! (yt?)
+6. Check limiter ✅
+7. Brisanje proizvoda (order) / FK ✅
+8. Slanje porudžbine na e-mail od kupca ✅
+
+9. Add to cart - total quantity - on select dates
+10. Provera passworda(2) na backu
+11. Omoguciti NULL deteails
+12. Firma U DB
+ 
+x. Local storage - cart, brisanje proizvoda - narucivanje => BUG
+x. DB Connection, pool => BUG
+
+
+
+Front
+9. O proizvodu informacije koje ne postoje da se ne prikazu
+10. Prikaz kolicine proizvoda na stanju posle odabira datuma
+11. Firma u korpi za narucivanje (opciono)
+
+
+9. Validacija podataka (Frontend / Backend)
+10. Prepared statment 
+11. Komentari  uz kod  
+12. Delete Product potrvrda
