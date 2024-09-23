@@ -8,7 +8,7 @@ exports.fetchAll = async (req, res) => {
   try{
     const keyword = req.params.keyword;
     let keywordQuery = '';
-    const {error} = validationSchemas.keyword.validate(keyword);
+    const {error} = validationSchemas.keyword.validate(keyword);  
 
     if(keyword && !error){
       // Construct SQL query to filter products by name using the provided keyword
@@ -17,7 +17,8 @@ exports.fetchAll = async (req, res) => {
 
     const conn = await db.pool.getConnection();
     // Execute SQL query to retrieve product data
-    const rows = await conn.query("SELECT p.*,i.path FROM product p INNER JOIN image i ON p.product_id = i.product_id " + keywordQuery); 
+    const rows = await conn.query(`SELECT p.product_id as id, p.total_quantity as totalQuantity, p.name, p.price, i.path 
+                                  FROM product p INNER JOIN image i ON p.product_id = i.product_id ${keywordQuery}`); 
     conn.release();
     res.json(rows);
   }
@@ -42,7 +43,9 @@ exports.fetchSingleProduct = async (req, res) => {
         })
       }
       // Execute SQL query to get product data for the specified ID
-      const rows = await conn.query(`SELECT p.*,i.path FROM product p INNER JOIN image i ON p.product_id = i.product_id WHERE p.product_id = ?`,[id]);
+      const rows = await conn.query(`SELECT p.product_id as id, p.total_quantity as totalQuantity, p.name, p.price, i.path, p.details 
+                                  FROM product p INNER JOIN image i ON p.product_id = i.product_id
+                                  WHERE p.product_id = ?`,[id]);
       await conn.release();
       // Check if product data was retrieved
       if(rows[0]){
@@ -148,31 +151,31 @@ exports.update = async (req, res) => {
  }
 
  // Validate updated product information
- const {error: nameError} = validationSchemas.name.validate(req.body.name);
- const {error: detailsError} = validationSchemas.details.validate(req.body.details);
- const {error: quantityError} = validationSchemas.quantity.validate(req.body.totalQuantity);
- const {error: priceError} = validationSchemas.price.validate(req.body.price);
+//  const {error: nameError} = validationSchemas.name.validate(req.body.name);
+//  const {error: detailsError} = validationSchemas.details.validate(req.body.details);
+//  const {error: quantityError} = validationSchemas.quantity.validate(req.body.totalQuantity);
+//  const {error: priceError} = validationSchemas.price.validate(req.body.price);
 
- if(nameError){
-   return res.status(400).json({
-     message: nameError.message
-   })
- }
- if(detailsError){
-   return res.status(400).json({
-     message: detailsError.message
-   })
- }
- if(quantityError){
-   return res.status(400).json({
-     message: quantityError.message
-   })
- }
- if(priceError){
-   return res.status(400).json({
-     message: priceError.message
-   })
- }
+//  if(nameError){
+//    return res.status(400).json({
+//      message: nameError.message
+//    })
+//  }
+//  if(detailsError){
+//    return res.status(400).json({
+//      message: detailsError.message
+//    })
+//  }
+//  if(quantityError){
+//    return res.status(400).json({
+//      message: quantityError.message
+//    })
+//  }
+//  if(priceError){
+//    return res.status(400).json({
+//      message: priceError.message
+//    })
+//  }
 
  
 
@@ -197,6 +200,9 @@ exports.update = async (req, res) => {
        details: req.body.details.trim(),
        imagePath: req.file ? req.file.filename : null
      }
+
+     console.log(object);
+     
  
      // Execute SQL query to update product information
      await conn.query('UPDATE product SET name=?, total_quantity=?, price=?, details=? WHERE product_id=?',

@@ -32,36 +32,45 @@ exports.getAllAdmins = async (req, res) => {
 // Register a new admin
 exports.register = async (req, res) => {
   try {
-    let email = req.body.email;
-    let {error:emailError} = validationSchemas.email.validate(email);
-    let {error:passwordError} = validationSchemas.password.validate(req.body.password);
+    //let email = req.body.email;
+    // let {error:emailError} = validationSchemas.email.validate(email);
+    // let {error:passwordError} = validationSchemas.password.validate(req.body.password);
 
-    if(emailError){
-      return res.status(400).json({
-        message: emailError.message
-      })
-    }
-    if(passwordError){
-      return res.status(400).json({
-        message: passwordError.message
-      })
+    // if(emailError){
+    //   return res.status(400).json({
+    //     message: emailError.message
+    //   })
+    // }
+    // if(passwordError){
+    //   return res.status(400).json({
+    //     message: passwordError.message
+    //   })
+    // }
+    const obj = {
+      email: req.body.email,
+      username: req.body.username,
+      phone: req.body.phone,
+      password: req.body.password
     }
     const conn = await db.pool.getConnection();
     // Check if the email already exists in the database
-    const rows = await conn.query(`SELECT email FROM admin WHERE email = ?`,[email]);
-    console.log(req.body);
-    if (rows.length > 0) {
+    const emailRow = await conn.query(`SELECT email FROM admin WHERE email = ?`,[obj.email]);
+
+    if (emailRow.length > 0) {
       conn.release();
       return res.status(409).json({
         message: "Email existiert bereits"
       });
     }
-    else if (req.body.password != req.body.repeatPassword) {
+    const usernameRow = await conn.query(`SELECT username FROM admin WHERE email = ?`,[obj.username]);
+
+    if (usernameRow.length > 0) {
       conn.release();
       return res.status(409).json({
-        message: "Password does not match"
+        message: "Username existiert bereits"
       });
-    } else {
+    }
+    else {
       // Hash the password
       bcrypt.hash(req.body.password, 10, async (err, hash) => {
         if (err) {
@@ -72,7 +81,7 @@ exports.register = async (req, res) => {
           });
         } else {
           // Insert the new admin into the database
-          await conn.query(`INSERT INTO admin (email, password) VALUES (?,?)`,[email,hash]);
+          await conn.query(`INSERT INTO admin (username, phone, email, password) VALUES (?,?,?,?)`,[obj.username, obj.phone, obj.email, hash]);
           conn.release();
           return res.status(201).json({
             message: "Admin registered successfully"
@@ -90,30 +99,30 @@ exports.register = async (req, res) => {
 
 // Log in as an admin
 exports.login = async (req, res) => {
-  if(req.body.email != defaultAdminName){
-    var {error:emailError} = validationSchemas.email.validate(req.body.email);
+  // if(req.body.email != defaultAdminName){
+  //   var {error:emailError} = validationSchemas.email.validate(req.body.email);
 
-  }
-  let {error: passwordError} = validationSchemas.password.validate(req.body.password);
+  // }
+  // let {error: passwordError} = validationSchemas.password.validate(req.body.password);
 
- if(emailError){
-      return res.status(400).json({
-        message: emailError.message
-      })
-    }
-    if(passwordError){
-      return res.status(400).json({
-        message: passwordError.message
-      })
-    }
+//  if(emailError){
+//       return res.status(400).json({
+//         message: emailError.message
+//       })
+//     }
+//     if(passwordError){
+//       return res.status(400).json({
+//         message: passwordError.message
+//       })
+//     }
   try {
     const conn = await db.pool.getConnection();
     // Retrieve admin information from the database
-    const admin = await conn.query(`SELECT admin_id,email, password FROM admin WHERE email = ?`,[req.body.email]);
+    const admin = await conn.query(`SELECT * FROM admin WHERE username = ?`,[req.body.username]);
     if (admin.length < 1) {
       conn.release();
       return res.status(401).json({
-        message: "Invalid email or password"
+        message: "Invalid username or password"
       });
     }
     // Compare the password with the hashed password
@@ -121,13 +130,18 @@ exports.login = async (req, res) => {
       if (!result) {
         conn.release();
         return res.status(401).json({
-          message: "Invalid email or password"
+          message: "Invalid username or password"
         });
       } else {
         // Create a JWT token for authentication
+        console.log(admin[0]);
+        
         const token = jwt.sign({
             email: admin[0].email,
-            id: admin[0].admin_id
+            username: admin[0].username,
+            id: admin[0].admin_id,
+            phone: admin[0].phone,
+            isAdmin: defaultAdminName == admin[0].username
           },
           process.env.JWT_KEY, {
             expiresIn: "8h"
@@ -206,7 +220,9 @@ exports.getCurrentEmail = async (req, res) => {
     const email = await conn.query('SELECT email FROM email ORDER BY created_at DESC LIMIT 1');
     // Return the email if found
     if (email.length > 0) {
-      res.status(200).json(email)
+      return res.status(200).json({
+        email: email[0].email
+      })
     } else {
       res.status(404).json({
         message: "Email not found"
@@ -225,12 +241,12 @@ exports.changeEmail = async (req, res) => {
   try {
     // Extract the new email from the request body
     const newEmail = req.body.email;
-    const {error} = validationSchemas.email.validate(newEmail);
-    if(error){
-      return res.status(400).json({
-        message: error.details[0].message
-      });
-    }
+    //const {error} = validationSchemas.email.validate(newEmail);
+    // if(error){
+    //   return res.status(400).json({
+    //     message: error.details[0].message
+    //   });
+    // }
     const conn = await db.pool.getConnection();
     // Insert the new email into the database
     await conn.query(`INSERT INTO email (email) VALUES (?)`,[newEmail]);

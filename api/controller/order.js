@@ -7,34 +7,34 @@ const validationSchemas = require('../validationSchemas');
 // Check product availability before placing an order
 exports.check = async (req, res) => {
     try {
-        
-        if(isNaN(req.body.id)){
-            return res.status(500).json({
-                message: "Server error"
-            })
-        }
-
-        const userQuantity = req.body.quantity;
-
         const conn = await db.pool.getConnection();
-        // Find product
-        const product = await conn.query(`SELECT total_quantity FROM product WHERE product_id = ?`,[req.body.id]);
-        if(product.length === 0){
-            return res.status(404).json({
-                message: "Product not found"
-            })
-        }
-        const totalProductQuantity = product[0].total_quantity; 
+        //startDate = 2024-01-25
+        //endDate = 2024-01-27
+
+        //DbStartDate = 2024-01-25 >= 2024-01-27
+        //DbEndDate = 2024-01-27 <= 2024-01-25
+   
+        console.log(req.body);
         
-        // If the requested quantity exceeds available quantity return message with available quantity
-        if(userQuantity > totalProductQuantity){
-            await conn.release();
+        const orders = await conn.query(`SELECT quantity FROM order_product WHERE product_id = ${req.body.id} AND ((STR_TO_DATE('${req.body.startDate}', '%Y-%m-%d') BETWEEN date_start AND date_end) OR (STR_TO_DATE('${req.body.endDate}', '%Y-%m-%d') BETWEEN date_start AND date_end) OR (date_start BETWEEN STR_TO_DATE('${req.params.startDate}', '%Y-%m-%d') AND STR_TO_DATE('${req.body.endDate}', '%Y-%m-%d')) OR (date_end BETWEEN STR_TO_DATE('${req.body.startDate}', '%Y-%m-%d') AND STR_TO_DATE('${req.body.endDate}', '%Y-%m-%d')))`);
+
+
+        let totalOrdersQuantity = 0;
+
+        for(let item of orders){
+            totalOrdersQuantity += item.quantity;
+        }
+        const product = await conn.query(`SELECT total_quantity FROM product WHERE product_id = '${req.body.id}'`);
+        const totalProductQuantity = product[0].total_quantity;
+        let diff = totalProductQuantity - totalOrdersQuantity;
+        
+
+        if(diff - req.body.quantity < 0){
             return res.status(400).json({
-                message: `Menge nicht verfügbar, Anzahl auf Lager: ${totalProductQuantity}` 
+                message: `Menge nicht verfügbar, Anzahl auf Lager: ${diff}` 
             })
         }
         else {
-            await conn.release();
             return res.status(200).json({
                 message: `Successfully`
             })
@@ -42,9 +42,8 @@ exports.check = async (req, res) => {
     }
     catch (err){
         console.log("Catch error: " + err);
-        await conn.release();
         res.status(500).json({
-            message: "Server error"
+            message: err
         });
     }
 }
@@ -52,70 +51,103 @@ exports.check = async (req, res) => {
 // Create a new order
 exports.create = async (req, res) => {
     try {
-        // Extract order information from the request body
-        const orderObject = {
-            name: req.body.name,
-            last_name: req.body.lastName,
-            phone: req.body.phone,
-            email: req.body.email,
-            address: req.body.address,
-            firma: req.body.firma,
-        }
 
-        //Validate order informations
+        // ************* Extract order information from the request body ************* //
+        // const orderObject = {
+        //     name: req.body.name,
+        //     last_name: req.body.lastName,
+        //     phone: req.body.phone,
+        //     email: req.body.email,
+        //     address: req.body.address,
+        //     firma: req.body.firma,
+        // }
+
+        const { phone, email, quantity, startDate, endDate } = req.body;
+
+       
+        const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0'); 
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
         
-        let {error:userError} = validationSchemas.userDetails.validate(orderObject);
-        let {error:priceError} = validationSchemas.price.validate(req.body.totalPrice);
+        const orderObject = {
+            phone: phone.trim(),  
+            email: email.toLowerCase().trim(),  
+            quantity: parseInt(quantity, 10), 
+            startDate: formatDate(startDate),  
+            endDate: formatDate(endDate)  
+        };
 
-        if(userError){
-            return res.status(400).json({
-                message: userError.message
-            })
-        }
+        const product = req.body.product;
 
-        if(priceError){
-            return res.status(400).json({
-                message: priceError.message
-            })
-        }
+        console.log(orderObject);
+        
+        
+        
 
-        const orderedProducts = req.body.products;
-        if(orderedProducts.length === 0){
-            return res.status(400).json({
-                message: "Products not found"
-            })
-        }
-        const totalPrice = req.body.totalPrice;
+        // ************* Validate order informations ************* //
+        
+        // let {error:userError} = validationSchemas.userDetails.validate(orderObject);
+        // let {error:priceError} = validationSchemas.price.validate(req.body.totalPrice);
+
+        // if(userError){
+        //     return res.status(400).json({
+        //         message: userError.message
+        //     })
+        // }
+
+        // if(priceError){
+        //     return res.status(400).json({
+        //         message: priceError.message
+        //     })
+        // }
+
+        
+        // if(orderedProducts.length === 0){
+        //     return res.status(400).json({
+        //         message: "Products not found"
+        //     })
+        // }
+                
+        //const totalPrice = req.body.totalPrice;
 
         const conn = await db.pool.getConnection(); 
 
         await conn.beginTransaction();
 
         try {
-            // Insert order information into the database
+            // ************* Insert order information into the database ************* //
             const insertOrderQuery = await conn.query(`INSERT INTO orders (first_name, last_name, phone, email, address, firma) VALUES (?,?,?,?,?,?)`,[orderObject.name,orderObject.last_name,orderObject.phone,orderObject.email,orderObject.address,orderObject.firma]);
             const orderInsertedID = insertOrderQuery.insertId;
 
-            // Insert ordered products into the database
-            for(let product of orderedProducts){
-               await conn.query (`INSERT INTO order_product (order_id, product_id, quantity, date_start, date_end) VALUES (?,?,?,?,?)`,[orderInsertedID, product.id, product.quantity, product.startDate, product.endDate]);
-            }
-    
-            // Retrieve product details for the ordered products
-            const productIDs = orderedProducts.map(product => product.id);
-            const placeholders = productIDs.map(() => '?').join(',');
-            const products = await conn.query(`SELECT name,product_id FROM product WHERE product_id IN (${placeholders})`,productIDs);
+            // ************* Insert ordered products into the database ************* //
+            // for(let product of orderedProducts){
+            //    await conn.query (`INSERT INTO order_product (order_id, product_id, quantity, date_start, date_end) VALUES (?,?,?,?,?)`,[orderInsertedID, product.id, product.quantity, product.startDate, product.endDate]);
+            // }
 
-            // Combine product details with order details for email
-            const combinedProducts = orderedProducts.map(productData => {
-                const productFromDB = products.find(product => product.product_id == productData.id);
-                return {
-                    name: productFromDB.name,
-                    quantity: productData.quantity,
-                    startDate: productData.startDate,
-                    endDate: productData.endDate
-                };
-            });
+            await conn.query (`INSERT INTO order_product (order_id, product_id, quantity, date_start, date_end) VALUES (?,?,?,?,?)`,[orderInsertedID, product.id, orderObject.quantity, orderObject.startDate, orderObject.endDate]);
+
+    
+            // ************* Retrieve product details for the ordered products ************* //
+
+            // const productIDs = orderedProducts.map(product => product.id);
+            // const placeholders = productIDs.map(() => '?').join(',');
+            // const products = await conn.query(`SELECT name,product_id FROM product WHERE product_id IN (${placeholders})`,productIDs);
+
+            // ************* Combine product details with order details for email ************* //
+
+            // const combinedProducts = orderedProducts.map(productData => {
+            //     const productFromDB = products.find(product => product.product_id == productData.id);
+            //     return {
+            //         name: productFromDB.name,
+            //         quantity: productData.quantity,
+            //         startDate: productData.startDate,
+            //         endDate: productData.endDate
+            //     };
+            // });
 
             // Retrieve email address for sending confirmation email
             const emailToSend = await conn.query('SELECT email FROM email ORDER BY created_at DESC LIMIT 1');
@@ -124,32 +156,49 @@ exports.create = async (req, res) => {
             await conn.release();
 
             // Prepare email content
-            let firma = orderObject.firma != null ? orderObject.firma : "/";
+            //let firma = orderObject.firma != null ? orderObject.firma : "/";
+            // let mailText = `<h1>Benutzer Informationen:</h1>               
+            //                         <h3>Name: ${orderObject.name} ${orderObject.last_name}</h3>
+            //                         <h3>Telefonnummer: ${orderObject.phone}</h3>
+            //                         <h3>Addresse: ${orderObject.address}</h3>
+            //                         <h3>Email: ${orderObject.email}</h3>
+            //                         <h3>Firma: ${firma}</h3><br>`;
+
             let mailText = `<h1>Benutzer Informationen:</h1>               
-                                    <h3>Name: ${orderObject.name} ${orderObject.last_name}</h3>
                                     <h3>Telefonnummer: ${orderObject.phone}</h3>
-                                    <h3>Addresse: ${orderObject.address}</h3>
-                                    <h3>Email: ${orderObject.email}</h3>
-                                    <h3>Firma: ${firma}</h3><br>`;
+                                    <h3>Email: ${orderObject.email}</h3><br>`;
 
             let productsString = '<h1>Produkte:</h1><table style="width: 100%; font-size: 16px; text-align: center">';
             // Construct product table in email content
-            for(let product of combinedProducts){
+            // for(let product of combinedProducts){
+            //     productsString += ` <tr>
+            //                         <th>Name</th>
+            //                         <th>Anzahl</th>
+            //                         <th>Start Datum</th>
+            //                         <th>End Datum</th>
+            //                         <th>Totalpreis</th>
+            //                       </tr>
+            //                        <tr>
+            //                         <td>${product.name}</td>
+            //                         <td>${product.quantity}</td>
+            //                         <td>${product.startDate}</td>
+            //                         <td>${product.endDate}</td>
+            //                         <td>${totalPrice} CHF</td>
+            //                        </tr>`
+            // }
                 productsString += ` <tr>
                                     <th>Name</th>
                                     <th>Anzahl</th>
                                     <th>Start Datum</th>
                                     <th>End Datum</th>
-                                    <th>Totalpreis</th>
                                   </tr>
                                    <tr>
                                     <td>${product.name}</td>
-                                    <td>${product.quantity}</td>
-                                    <td>${product.startDate}</td>
-                                    <td>${product.endDate}</td>
-                                    <td>${totalPrice} CHF</td>
+                                    <td>${orderObject.quantity}</td>
+                                    <td>${orderObject.startDate}</td>
+                                    <td>${orderObject.endDate}</td>
                                    </tr>`
-            }
+            
             productsString += '</table>';
             mailText += productsString;
 
